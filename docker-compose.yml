@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  # MySQL数据库容器
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: second_hand
+    ports:
+      - "3306:3306"
+    volumes:
+      mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot123"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI后端容器
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Vue3前端Nginx容器
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+# 持久化MySQL数据卷
+volumes:
+  mysql_data:
